@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emoji Sender</title>
+    <script src="/socket.io/socket.io.js"></script> <!-- Include the Socket.IO client library -->
+</head>
+<body>
+    <h1>Choose an Emoji!</h1>
+
+    <!-- Emoji Buttons -->
+    <button class="emoji" data-emoji="😊">😊</button>
+    <button class="emoji" data-emoji="😎">😎</button>
+    <button class="emoji" data-emoji="😍">😍</button>
+    <button class="emoji" data-emoji="😂">😂</button>
+    <button class="emoji" data-emoji="🥳">🥳</button>
+    <button class="emoji" data-emoji="🔥">🔥</button>
+    <button class="emoji" data-emoji="❤️">❤️</button>
+    <button class="emoji" data-emoji="🎉">🎉</button>
+
+    <script>
+        function getFormattedTimestamp() {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+            const year = now.getFullYear();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+
+            return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+        }
+        const socket = io();  // Connect to the server via Socket.IO
+        let userId = '';      // Initialize userId variable
+
+        // Listen for the unique user ID assignment from the server
+        socket.on('assignUserId', (data) => {
+            userId = data.userId;  // Get the user ID from the server
+            console.log('Assigned user ID:', userId);
+            sessionStorage.setItem('userId', userId);  // Store the user ID in sessionStorage
+        });
+
+        // Event listener for each emoji button
+        const emojiButtons = document.querySelectorAll('.emoji');
+        emojiButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const emoji = button.getAttribute('data-emoji');
+                const emojiData = {
+                    emoji: emoji,
+                    userId: userId || sessionStorage.getItem('userId'),  // Use dynamic user ID
+                    timestamp: getFormattedTimestamp()
+                };
+
+                // Emit the emoji data to the server
+                socket.emit('sendEmoji', emojiData);
+                console.log('Emoji data sent:', emojiData);
+            });
+        });
+    </script>
+</body>
+</html>
